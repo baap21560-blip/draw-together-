@@ -14,7 +14,8 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); overflow: hidden; position: fixed; user-select: none; -webkit-user-select: none; }
         #lobby { display: flex; align-items: center; justify-content: center; height: 100vh; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); position: absolute; width: 100%; z-index: 2000; }
         .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); padding: 40px; border-radius: 32px; text-align: center; color: white; width: 85%; max-width: 360px; }
-        #game-container { display: none; width: 100%; height: 100%; position: relative; }
+        #game-container { display: none; width: 100%; height: 100%; position: relative; -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; }
         canvas { background-color: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; display: block; touch-action: none; }
         
         .toolbar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; background: var(--panel); padding: 8px; border-radius: 24px; box-shadow: var(--shadow); z-index: 100; align-items: center; border: 1px solid var(--border); }
