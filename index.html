@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,7 +95,7 @@
     let startPos = { x: 0, y: 0 }, shapes = {}, currentPoints = [];
     const imageCache = {};
 
-
+    // LOCAL USER HISTORY FOR INDEPENDENT UNDO/REDO
     let myActionIds = []; 
     let redoStack = [];
 
@@ -258,7 +259,7 @@
         if(shapeData) {
             newShapeRef = push(ref(db, `rooms/${currentRoom}/shapes`), shapeData);
             myActionIds.push(newShapeRef.key);
-            redoStack = []; 
+            redoStack = []; // Clear redo on new action
         }
 
         if (tool === 'select' && !isMoving && !isResizing) {
@@ -274,7 +275,7 @@
         isDrawing = false; isMoving = false; isResizing = false; currentPoints = []; draw();
     };
 
-    
+    // INDEPENDENT UNDO: Only deletes the last item YOU drew
     document.getElementById('undoBtn').onclick = async () => {
         if (myActionIds.length === 0) return;
         const lastId = myActionIds.pop();
@@ -285,7 +286,7 @@
         }
     };
 
-    
+    // INDEPENDENT REDO: Restores the last item YOU undid
     document.getElementById('redoBtn').onclick = () => {
         if (redoStack.length === 0) return;
         const redoItem = redoStack.pop();
