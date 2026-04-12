@@ -45,7 +45,8 @@
         <div id="actionGroup">
             <button id="deleteBtn" class="btn danger-btn" title="Delete Selection"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
         </div>
-        <button id="undoBtn" class="btn" style="background:var(--panel); border: 1px solid var(--border);" title="Undo Last Action"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
+        <button id="undoBtn" class="btn" style="background:var(--panel); border: 1px solid var(--border);" title="Undo Your Last Action"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
+        <button id="redoBtn" class="btn" style="background:var(--panel); border: 1px solid var(--border);" title="Redo Your Last Action"><svg viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg></button>
     </div>
 
     <div class="toolbar" id="mainToolbar">
@@ -74,7 +75,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update, limitToLast, query, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, update, limitToLast, query, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC8hO4NFiD4S1Qna2KMMqCkxjMMNZ560ls",
@@ -92,6 +93,10 @@
     let selectedIds = [], selectionBox = null, isMoving = false, isResizing = false;
     let startPos = { x: 0, y: 0 }, shapes = {}, currentPoints = [];
     const imageCache = {};
+
+
+    let myActionIds = []; 
+    let redoStack = [];
 
     document.getElementById('joinBtn').onclick = () => {
         currentRoom = document.getElementById('roomInput').value.trim() || "General";
@@ -154,8 +159,10 @@
             ctx.save();
             ctx.strokeStyle = "#FFFFFF";
             ctx.lineWidth = document.getElementById('sizePicker').value;
-            ctx.beginPath(); ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
-            currentPoints.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            if (currentPoints.length > 1) {
+                ctx.beginPath(); ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
+                currentPoints.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            }
             ctx.restore();
         }
 
@@ -198,7 +205,6 @@
     const moveAction = (e) => {
         if (!isDrawing) return;
         const m = getCoord(e);
-        const currentSize = parseInt(document.getElementById('sizePicker').value);
 
         if (tool === 'select') {
             if (isResizing) {
@@ -230,21 +236,32 @@
         if (!isDrawing) return;
         const m = getCoord(e.touches ? e.changedTouches[0] : e);
         
+        let newShapeRef = null;
+        let shapeData = null;
+
         if ((tool === 'pen' || tool === 'eraser') && currentPoints.length > 1) {
             const minX = Math.min(...currentPoints.map(p => p.x)), minY = Math.min(...currentPoints.map(p => p.y));
             const maxX = Math.max(...currentPoints.map(p => p.x)), maxY = Math.max(...currentPoints.map(p => p.y));
-            push(ref(db, `rooms/${currentRoom}/shapes`), {
+            shapeData = {
                 type: 'pen', points: currentPoints, x: minX, y: minY, w: maxX - minX, h: maxY - minY,
                 color: tool === 'eraser' ? "#FFFFFF" : document.getElementById('colorPicker').value, 
                 size: document.getElementById('sizePicker').value
-            });
+            };
         } else if (['rect', 'circle', 'triangle'].includes(tool)) {
-            push(ref(db, `rooms/${currentRoom}/shapes`), {
+            shapeData = {
                 type: tool, x: Math.min(startPos.x, m.x), y: Math.min(startPos.y, m.y),
                 w: Math.abs(m.x - startPos.x), h: Math.abs(m.y - startPos.y),
                 color: document.getElementById('colorPicker').value, size: document.getElementById('sizePicker').value
-            });
-        } else if (tool === 'select' && !isMoving && !isResizing) {
+            };
+        }
+
+        if(shapeData) {
+            newShapeRef = push(ref(db, `rooms/${currentRoom}/shapes`), shapeData);
+            myActionIds.push(newShapeRef.key);
+            redoStack = []; 
+        }
+
+        if (tool === 'select' && !isMoving && !isResizing) {
             const bx = Math.min(selectionBox.x, selectionBox.x + selectionBox.w), by = Math.min(selectionBox.y, selectionBox.y + selectionBox.h);
             const bw = Math.abs(selectionBox.w), bh = Math.abs(selectionBox.h);
             Object.keys(shapes).forEach(id => {
@@ -257,13 +274,23 @@
         isDrawing = false; isMoving = false; isResizing = false; currentPoints = []; draw();
     };
 
+    
     document.getElementById('undoBtn').onclick = async () => {
-        const q = query(ref(db, `rooms/${currentRoom}/shapes`), limitToLast(1));
-        const snap = await get(q);
-        if (snap.exists()) {
-            const lastId = Object.keys(snap.val())[0];
+        if (myActionIds.length === 0) return;
+        const lastId = myActionIds.pop();
+        const lastShape = shapes[lastId];
+        if (lastShape) {
+            redoStack.push({ id: lastId, data: lastShape });
             remove(ref(db, `rooms/${currentRoom}/shapes/${lastId}`));
         }
+    };
+
+    
+    document.getElementById('redoBtn').onclick = () => {
+        if (redoStack.length === 0) return;
+        const redoItem = redoStack.pop();
+        set(ref(db, `rooms/${currentRoom}/shapes/${redoItem.id}`), redoItem.data);
+        myActionIds.push(redoItem.id);
     };
 
     document.getElementById('deleteBtn').onclick = () => {
@@ -280,7 +307,10 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
-            img.onload = () => push(ref(db, `rooms/${currentRoom}/shapes`), { type: 'image', data: ev.target.result, x: 50, y: 50, w: img.width/4, h: img.height/4 });
+            img.onload = () => {
+                const newShapeRef = push(ref(db, `rooms/${currentRoom}/shapes`), { type: 'image', data: ev.target.result, x: 50, y: 50, w: img.width/4, h: img.height/4 });
+                myActionIds.push(newShapeRef.key);
+            };
             img.src = ev.target.result;
         };
         reader.readAsDataURL(e.target.files[0]);
