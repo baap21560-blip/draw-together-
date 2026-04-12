@@ -3,80 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Draw together</title>
+    <title>Draw Together</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #6366f1; 
-            --primary-glow: rgba(99, 102, 241, 0.3);
-            --bg: #0f172a; 
-            --panel: rgba(255, 255, 255, 0.9); 
-            --border: rgba(226, 232, 240, 0.8);
-            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --primary: #6366f1; --bg: #0f172a; --panel: rgba(255, 255, 255, 0.95); 
+            --border: rgba(226, 232, 240, 0.8); --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
-
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--bg); overflow: hidden; position: fixed;
-            user-select: none; -webkit-user-select: none;
-        }
-
-        #lobby { 
-            display: flex; align-items: center; justify-content: center; height: 100vh; 
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-            position: absolute; width: 100%; z-index: 2000; transition: 0.5s ease;
-        }
-        .card { 
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px);
-            padding: 40px; border-radius: 32px; text-align: center; 
-            box-shadow: var(--shadow); width: 85%; max-width: 360px;
-            border: 1px solid rgba(255, 255, 255, 0.1); color: white;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); overflow: hidden; position: fixed; user-select: none; -webkit-user-select: none; }
+        #lobby { display: flex; align-items: center; justify-content: center; height: 100vh; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); position: absolute; width: 100%; z-index: 2000; }
+        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); padding: 40px; border-radius: 32px; text-align: center; color: white; width: 85%; max-width: 360px; }
         #game-container { display: none; width: 100%; height: 100%; position: relative; }
+        canvas { background-color: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; display: block; touch-action: none; }
         
-        canvas { 
-            background-color: #ffffff;
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 20px 20px;
-            display: block; touch-action: none;
-        }
-
-        
-        .toolbar { 
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 8px; background: var(--panel); padding: 10px; 
-            border-radius: 24px; box-shadow: var(--shadow); z-index: 100; 
-            align-items: center; border: 1px solid var(--border); backdrop-filter: blur(15px);
-            max-width: 95vw; pointer-events: auto;
-        }
-        
-        .btn { 
-            border: none; background: transparent; min-width: 44px; height: 44px; 
-            display: flex; align-items: center; justify-content: center; 
-            border-radius: 16px; cursor: pointer; color: #475569; transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .btn:active { transform: scale(0.9); }
+        .toolbar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; background: var(--panel); padding: 8px; border-radius: 24px; box-shadow: var(--shadow); z-index: 100; align-items: center; border: 1px solid var(--border); }
+        .btn { border: none; background: transparent; min-width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; color: #475569; }
         .btn.active { background: var(--primary); color: white; }
         .btn svg { width: 20px; height: 20px; fill: currentColor; }
         
-        .divider { width: 2px; height: 24px; background: rgba(0,0,0,0.08); margin: 0 4px; }
-        
-        input[type="color"] { 
-            -webkit-appearance: none; border: 2px solid white; width: 30px; height: 30px; 
-            border-radius: 50%; cursor: pointer; background: none; flex-shrink: 0;
-        }
-
-        .header-ui {
-            position: fixed; top: 15px; left: 15px; z-index: 100;
-        }
-        .room-tag {
-            background: var(--panel); padding: 8px 16px; border-radius: 12px;
-            font-size: 14px; font-weight: 700; border: 1px solid var(--border);
-        }
-
+        .header-ui { position: fixed; top: 15px; left: 15px; z-index: 100; display: flex; gap: 10px; }
+        .room-tag { background: var(--panel); padding: 8px 16px; border-radius: 12px; font-weight: 700; border: 1px solid var(--border); }
+        #actionGroup { display: none; gap: 8px; }
+        .danger-btn { background: #fee2e2; color: #ef4444; }
         #imgInput { display: none; }
     </style>
 </head>
@@ -85,41 +33,40 @@
 <div id="lobby">
     <div class="card">
         <h2>Draw<span style="color:var(--primary)">Together</span></h2>
-        <input type="text" id="roomInput" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:none;" placeholder="Room Name">
-        <input type="password" id="adminKeyInput" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:none;" placeholder="Admin Key">
-        <button id="joinBtn" style="width:100%; background:var(--primary); color:white; padding:16px; border-radius:12px; border:none; font-weight:700;">Start Drawing</button>
+        <input type="text" id="roomInput" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px;" placeholder="Room Name">
+        <input type="password" id="adminKeyInput" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px;" placeholder="Admin Key">
+        <button id="joinBtn" style="width:100%; background:var(--primary); color:white; padding:16px; border-radius:12px; border:none; font-weight:700;">Launch</button>
     </div>
 </div>
 
 <div id="game-container">
     <div class="header-ui">
         <div class="room-tag">Room: <span id="roomTitle" style="color:var(--primary)">General</span></div>
+        <div id="actionGroup">
+            <button id="deleteBtn" class="btn danger-btn" title="Delete Selection"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+        </div>
+        <button id="undoBtn" class="btn" style="background:var(--panel); border: 1px solid var(--border);" title="Undo Last Action"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
     </div>
 
     <div class="toolbar" id="mainToolbar">
-        <button class="btn tool" data-tool="select" title="Move">
-            <svg viewBox="0 0 24 24"><path d="M7 2l12 11.2l-5.8 0.5l3.3 7.3l-2.2 1l-3.2-7.4L7 18.5V2z"/></svg>
-        </button>
-        <button class="btn tool active" data-tool="pen" title="Pen">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
-        </button>
-        <button class="btn tool" data-tool="rect" title="Square">
-            <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg>
-        </button>
+        <button class="btn tool" data-tool="select" title="Select Area"><svg viewBox="0 0 24 24"><path d="M7 2l12 11.2l-5.8 0.5l3.3 7.3l-2.2 1l-3.2-7.4L7 18.5V2z"/></svg></button>
+        <button class="btn tool active" data-tool="pen" title="Pen"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        <button class="btn tool" data-tool="eraser" title="Eraser"><svg viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l1.45-1.45L16.24 3.56z"/></svg></button>
         
-        <div class="divider"></div>
+        <div style="width:1px;height:20px;background:#ddd"></div>
+
+        <button class="btn tool" data-tool="rect" title="Rectangle"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg></button>
+        <button class="btn tool" data-tool="circle" title="Circle"><svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></button>
+        <button class="btn tool" data-tool="triangle" title="Triangle"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></button>
+        
+        <div style="width:1px;height:20px;background:#ddd"></div>
+
+        <input type="range" id="sizePicker" min="1" max="60" value="5" style="width:50px">
         <input type="color" id="colorPicker" value="#6366f1">
-        <div class="divider"></div>
         
-        <button id="undoBtn" class="btn"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
-        
-        <div id="adminTools" style="display:none; gap: 8px;">
-            <div class="divider"></div>
+        <div id="adminTools" style="display:none; gap: 6px;">
             <input type="file" id="imgInput" accept="image/*">
-            <button class="btn" onclick="document.getElementById('imgInput').click()" style="color: #059669;">
-                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-            </button>
-            <button id="clearBtn" class="btn" style="color:#ef4444"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+            <button class="btn" onclick="document.getElementById('imgInput').click()"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>
         </div>
     </div>
     <canvas id="canvas"></canvas>
@@ -127,176 +74,223 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, update, limitToLast, query, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC8hO4NFiD4S1Qna2KMMqCkxjMMNZ560ls",
         authDomain: "draw-together-7110c.firebaseapp.com",
         databaseURL: "https://draw-together-7110c-default-rtdb.firebaseio.com",
         projectId: "draw-together-7110c",
-        storageBucket: "draw-together-7110c.firebasestorage.app",
-        messagingSenderId: "930035967438",
-        appId: "1930035967438:web:e57ea55f4b7c0b3658379f"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const toolbar = document.getElementById('mainToolbar');
 
-    let currentRoom = "", isAdmin = false, tool = "pen", isDrawing = false;
-    let selectedId = null, offset = { x: 0, y: 0 }, startPos = { x: 0, y: 0 };
-    let shapes = {}, undoStack = [];
+    let currentRoom = "", tool = "pen", isDrawing = false;
+    let selectedIds = [], selectionBox = null, isMoving = false, isResizing = false;
+    let startPos = { x: 0, y: 0 }, shapes = {}, currentPoints = [];
     const imageCache = {};
 
-   
-    ['touchstart', 'mousedown', 'click'].forEach(evt => {
-        toolbar.addEventListener(evt, (e) => e.stopPropagation());
-    });
-
     document.getElementById('joinBtn').onclick = () => {
-        const room = document.getElementById('roomInput').value.trim() || "General";
-        if(document.getElementById('adminKeyInput').value === "21560") {
-            isAdmin = true;
-            document.getElementById('adminTools').style.display = 'flex';
-        }
-        currentRoom = room;
-        document.getElementById('roomTitle').innerText = room;
+        currentRoom = document.getElementById('roomInput').value.trim() || "General";
+        if(document.getElementById('adminKeyInput').value === "21560") document.getElementById('adminTools').style.display = 'flex';
         document.getElementById('lobby').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        resize();
-        sync();
+        resize(); sync();
     };
 
-    function resize() { 
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
-        draw(); 
-    }
-
-    function sync() {
-        onValue(ref(db, `rooms/${currentRoom}/shapes`), (snap) => {
-            shapes = snap.val() || {};
-            draw();
-        });
-    }
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; draw(); }
+    function sync() { onValue(ref(db, `rooms/${currentRoom}/shapes`), (snap) => { shapes = snap.val() || {}; draw(); }); }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         Object.keys(shapes).forEach(id => {
             const s = shapes[id];
             ctx.save();
-            ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 3;
+            ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = s.size || 3;
+            ctx.lineCap = "round"; ctx.lineJoin = "round";
+
             if (s.type === 'image') {
                 if (imageCache[s.data]) ctx.drawImage(imageCache[s.data], s.x, s.y, s.w, s.h);
-                else {
-                    const img = new Image(); img.src = s.data;
-                    img.onload = () => { imageCache[s.data] = img; draw(); };
-                }
-            } else if (s.type === 'rect') ctx.strokeRect(s.x, s.y, s.w, s.h);
-            else if (s.type === 'pen') {
-                ctx.lineCap = "round"; ctx.lineJoin = "round";
-                ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x1, s.y1); ctx.stroke();
+                else { const img = new Image(); img.src = s.data; img.onload = () => { imageCache[s.data] = img; draw(); }; }
+            } else if (s.type === 'pen' && s.points) {
+                ctx.beginPath();
+                ctx.moveTo(s.points[0].x, s.points[0].y);
+                for(let i=1; i<s.points.length; i++) ctx.lineTo(s.points[i].x, s.points[i].y);
+                ctx.stroke();
+            } else if (s.type === 'rect') {
+                ctx.strokeRect(s.x, s.y, s.w, s.h);
+            } else if (s.type === 'circle') {
+                ctx.beginPath(); ctx.arc(s.x + s.w/2, s.y + s.h/2, Math.abs(s.w/2), 0, Math.PI * 2); ctx.stroke();
+            } else if (s.type === 'triangle') {
+                ctx.beginPath(); ctx.moveTo(s.x + s.w/2, s.y); ctx.lineTo(s.x, s.y + s.h); ctx.lineTo(s.x + s.w, s.y + s.h); ctx.closePath(); ctx.stroke();
             }
-            if (selectedId === id) {
+
+            if (selectedIds.includes(id)) {
                 ctx.setLineDash([5, 5]); ctx.strokeStyle = "#6366f1";
-                ctx.strokeRect(s.x-5, s.y-5, (s.w||(s.x1-s.x))+10, (s.h||(s.y1-s.y))+10);
+                const pad = 6;
+                ctx.strokeRect(s.x - pad, s.y - pad, (s.w || 10) + pad*2, (s.h || 10) + pad*2);
+                if (s.w && s.h) {
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = "#6366f1";
+                    ctx.fillRect(s.x + s.w, s.y + s.h, 12, 12);
+                }
             }
             ctx.restore();
         });
+
+        if (isDrawing && tool !== 'select' && tool !== 'eraser') {
+            ctx.save();
+            ctx.strokeStyle = document.getElementById('colorPicker').value;
+            ctx.lineWidth = document.getElementById('sizePicker').value;
+            if (tool === 'pen' && currentPoints.length > 1) {
+                ctx.beginPath(); ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
+                currentPoints.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            }
+            ctx.restore();
+        } else if (isDrawing && tool === 'eraser') {
+            ctx.save();
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = document.getElementById('sizePicker').value;
+            ctx.beginPath(); ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
+            currentPoints.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            ctx.restore();
+        }
+
+        if (selectionBox && tool === 'select' && !isMoving && !isResizing) {
+            ctx.strokeStyle = "rgba(99, 102, 241, 0.5)"; ctx.fillStyle = "rgba(99, 102, 241, 0.1)";
+            ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.w, selectionBox.h);
+            ctx.fillRect(selectionBox.x, selectionBox.y, selectionBox.w, selectionBox.h);
+        }
     }
 
     const getCoord = (e) => {
         const ev = e.touches ? e.touches[0] : e;
-        const rect = canvas.getBoundingClientRect();
-        return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+        return { x: ev.clientX, y: ev.clientY };
     };
 
     const startAction = (e) => {
-        if (e.target !== canvas) return; // CRITICAL: Only start if touching the canvas directly
+        if (e.target !== canvas) return;
         const m = getCoord(e);
         isDrawing = true; startPos = m;
+        currentPoints = [m];
 
         if (tool === 'select') {
-            selectedId = null;
-            Object.keys(shapes).reverse().forEach(id => {
+            let hit = false;
+            let resizeHit = false;
+            selectedIds.forEach(id => {
                 const s = shapes[id];
-                const w = s.w || Math.abs(s.x1 - s.x);
-                const h = s.h || Math.abs(s.y1 - s.y);
-                if (m.x >= s.x && m.x <= s.x + w && m.y >= s.y && m.y <= s.y + h) {
-                    if (!selectedId) { selectedId = id; offset = { x: m.x - s.x, y: m.y - s.y }; }
+                if (s.w && s.h && m.x >= s.x + s.w && m.x <= s.x + s.w + 20 && m.y >= s.y + s.h && m.y <= s.y + s.h + 20) {
+                    resizeHit = true;
+                    isResizing = true;
+                } else if (m.x >= s.x && m.x <= s.x + (s.w || 10) && m.y >= s.y && m.y <= s.y + (s.h || 10)) {
+                    hit = true;
                 }
             });
-            draw();
+            if (resizeHit) return;
+            if (hit) isMoving = true;
+            else { selectedIds = []; selectionBox = { x: m.x, y: m.y, w: 0, h: 0 }; document.getElementById('actionGroup').style.display = 'none'; }
         }
     };
 
     const moveAction = (e) => {
         if (!isDrawing) return;
         const m = getCoord(e);
-        if (tool === 'select' && selectedId) {
-            const s = shapes[selectedId];
-            const updates = { x: m.x - offset.x, y: m.y - offset.y };
-            if (s.type === 'pen') {
-                updates.x1 = s.x1 + (updates.x - s.x);
-                updates.y1 = s.y1 + (updates.y - s.y);
-            }
-            update(ref(db, `rooms/${currentRoom}/shapes/${selectedId}`), updates);
-        } else if (tool === 'pen') {
-            const data = { type: 'pen', x: startPos.x, y: startPos.y, x1: m.x, y1: m.y, color: document.getElementById('colorPicker').value };
-            const newRef = push(ref(db, `rooms/${currentRoom}/shapes`), data);
-            undoStack.push(newRef.key);
-            startPos = m;
+        const currentSize = parseInt(document.getElementById('sizePicker').value);
+
+        if (tool === 'select') {
+            if (isResizing) {
+                selectedIds.forEach(id => {
+                    const s = shapes[id];
+                    if (s.w && s.h) {
+                        update(ref(db, `rooms/${currentRoom}/shapes/${id}`), {
+                            w: Math.max(20, m.x - s.x),
+                            h: Math.max(20, m.y - s.y)
+                        });
+                    }
+                });
+            } else if (isMoving) {
+                const dx = m.x - startPos.x, dy = m.y - startPos.y;
+                selectedIds.forEach(id => {
+                    const s = shapes[id];
+                    let up = { x: s.x + dx, y: s.y + dy };
+                    if (s.points) up.points = s.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                    update(ref(db, `rooms/${currentRoom}/shapes/${id}`), up);
+                });
+                startPos = m;
+            } else { selectionBox.w = m.x - selectionBox.x; selectionBox.h = m.y - selectionBox.y; draw(); }
+        } else if (tool === 'pen' || tool === 'eraser') {
+            currentPoints.push(m); draw();
         }
     };
 
     const endAction = (e) => {
         if (!isDrawing) return;
         const m = getCoord(e.touches ? e.changedTouches[0] : e);
-        if (tool === 'rect') {
-            const data = { type: 'rect', x: Math.min(startPos.x, m.x), y: Math.min(startPos.y, m.y), w: Math.abs(m.x - startPos.x), h: Math.abs(m.y - startPos.y), color: document.getElementById('colorPicker').value };
-            const newRef = push(ref(db, `rooms/${currentRoom}/shapes`), data);
-            undoStack.push(newRef.key);
+        
+        if ((tool === 'pen' || tool === 'eraser') && currentPoints.length > 1) {
+            const minX = Math.min(...currentPoints.map(p => p.x)), minY = Math.min(...currentPoints.map(p => p.y));
+            const maxX = Math.max(...currentPoints.map(p => p.x)), maxY = Math.max(...currentPoints.map(p => p.y));
+            push(ref(db, `rooms/${currentRoom}/shapes`), {
+                type: 'pen', points: currentPoints, x: minX, y: minY, w: maxX - minX, h: maxY - minY,
+                color: tool === 'eraser' ? "#FFFFFF" : document.getElementById('colorPicker').value, 
+                size: document.getElementById('sizePicker').value
+            });
+        } else if (['rect', 'circle', 'triangle'].includes(tool)) {
+            push(ref(db, `rooms/${currentRoom}/shapes`), {
+                type: tool, x: Math.min(startPos.x, m.x), y: Math.min(startPos.y, m.y),
+                w: Math.abs(m.x - startPos.x), h: Math.abs(m.y - startPos.y),
+                color: document.getElementById('colorPicker').value, size: document.getElementById('sizePicker').value
+            });
+        } else if (tool === 'select' && !isMoving && !isResizing) {
+            const bx = Math.min(selectionBox.x, selectionBox.x + selectionBox.w), by = Math.min(selectionBox.y, selectionBox.y + selectionBox.h);
+            const bw = Math.abs(selectionBox.w), bh = Math.abs(selectionBox.h);
+            Object.keys(shapes).forEach(id => {
+                const s = shapes[id];
+                if (s.x >= bx && s.x <= bx + bw && s.y >= by && s.y <= by + bh) selectedIds.push(id);
+            });
+            selectionBox = null;
+            document.getElementById('actionGroup').style.display = selectedIds.length ? 'flex' : 'none';
         }
-        isDrawing = false;
+        isDrawing = false; isMoving = false; isResizing = false; currentPoints = []; draw();
     };
 
-   
+    document.getElementById('undoBtn').onclick = async () => {
+        const q = query(ref(db, `rooms/${currentRoom}/shapes`), limitToLast(1));
+        const snap = await get(q);
+        if (snap.exists()) {
+            const lastId = Object.keys(snap.val())[0];
+            remove(ref(db, `rooms/${currentRoom}/shapes/${lastId}`));
+        }
+    };
+
+    document.getElementById('deleteBtn').onclick = () => {
+        selectedIds.forEach(id => remove(ref(db, `rooms/${currentRoom}/shapes/${id}`)));
+        selectedIds = []; document.getElementById('actionGroup').style.display = 'none';
+    };
+
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(e); }, {passive: false});
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveAction(e); }, {passive: false});
     canvas.addEventListener('touchend', (e) => { e.preventDefault(); endAction(e); }, {passive: false});
-
-    canvas.onmousedown = startAction;
-    window.onmousemove = moveAction;
-    window.onmouseup = endAction;
-
-    document.getElementById('undoBtn').onclick = () => {
-        const id = undoStack.pop();
-        if (id) remove(ref(db, `rooms/${currentRoom}/shapes/${id}`));
-    };
-
+    canvas.onmousedown = startAction; window.onmousemove = moveAction; window.onmouseup = endAction;
+    
     document.getElementById('imgInput').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
-            img.onload = () => {
-                const data = { type: 'image', data: ev.target.result, x: 50, y: 50, w: img.width/4, h: img.height/4 };
-                const newRef = push(ref(db, `rooms/${currentRoom}/shapes`), data);
-                undoStack.push(newRef.key);
-            };
+            img.onload = () => push(ref(db, `rooms/${currentRoom}/shapes`), { type: 'image', data: ev.target.result, x: 50, y: 50, w: img.width/4, h: img.height/4 });
             img.src = ev.target.result;
         };
         reader.readAsDataURL(e.target.files[0]);
     };
 
     document.querySelectorAll('.tool').forEach(b => b.onclick = () => {
-        document.querySelector('.tool.active')?.classList.remove('active');
+        document.querySelector('.tool.active').classList.remove('active');
         b.classList.add('active'); tool = b.dataset.tool;
+        selectedIds = []; document.getElementById('actionGroup').style.display = 'none'; draw();
     });
-
-    document.getElementById('clearBtn').onclick = () => {
-        if(confirm("Clear All?")) remove(ref(db, `rooms/${currentRoom}/shapes`));
-    };
 
     window.onresize = resize;
 </script>
