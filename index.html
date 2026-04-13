@@ -16,7 +16,7 @@
         #game-container { display: none; width: 100%; height: 100%; position: relative; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
         canvas { background-color: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; display: block; touch-action: none; }
         
-        /* Mobile Optimized Toolbar */
+        /* Mobile Optimized Toolbar with Sliding Indicator */
         .toolbar { 
             position: fixed; 
             bottom: 20px; 
@@ -31,11 +31,18 @@
             z-index: 100; 
             align-items: center; 
             border: 1px solid var(--border);
-            max-width: 95vw;
+            max-width: 90vw;
             overflow-x: auto;
-            scrollbar-width: none; /* Hide scrollbar Firefox */
+            /* Visual hint: fade right edge to show it continues */
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
         }
-        .toolbar::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
+
+        /* Show scrollbar on mobile to hint at scrollability */
+        .toolbar::-webkit-scrollbar { height: 3px; }
+        .toolbar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         .btn { border: none; background: transparent; min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; color: #475569; flex-shrink: 0; }
         .btn.active { background: var(--primary); color: white; }
