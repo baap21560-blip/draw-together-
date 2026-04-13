@@ -16,7 +16,7 @@
         #game-container { display: none; width: 100%; height: 100%; position: relative; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
         canvas { background-color: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; display: block; touch-action: none; }
         
-        /* Mobile Optimized Toolbar with Sliding Indicator */
+     
         .toolbar { 
             position: fixed; 
             bottom: 20px; 
@@ -33,14 +33,14 @@
             border: 1px solid var(--border);
             max-width: 90vw;
             overflow-x: auto;
-            /* Visual hint: fade right edge to show it continues */
+          
             -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
             mask-image: linear-gradient(to right, black 85%, transparent 100%);
             scrollbar-width: thin;
             scrollbar-color: var(--primary) transparent;
         }
 
-        /* Show scrollbar on mobile to hint at scrollability */
+    
         .toolbar::-webkit-scrollbar { height: 3px; }
         .toolbar::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
